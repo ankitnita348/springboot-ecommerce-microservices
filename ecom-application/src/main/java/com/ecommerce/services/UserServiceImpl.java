@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -17,12 +20,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO createUser(UserRequestDTO requestDTO) {
 
-        // Duplicate email check
         if (userRepository.existsByEmail(requestDTO.getEmail())) {
             throw new RuntimeException("Email already exists: " + requestDTO.getEmail());
         }
 
-        // Builder pattern se entity banao
         User user = User.builder()
                 .firstName(requestDTO.getFirstName())
                 .lastName(requestDTO.getLastName())
@@ -30,16 +31,30 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User savedUser = userRepository.save(user);
-
         log.info("User created with id: {}", savedUser.getId());
 
-        // Response DTO return karo
+        return toResponseDTO(savedUser);  // ✅ using helper
+    }
+
+    @Override
+    public List<UserResponseDTO> getAllUsers() {
+        log.info("Fetching all users");
+
+        return userRepository.findAll()
+                .stream()
+                .map(this::toResponseDTO)  // ✅ using helper
+                .collect(Collectors.toList());
+    }
+
+    // ✅ helper method added inside the class before closing brace
+    private UserResponseDTO toResponseDTO(User user) {
         return UserResponseDTO.builder()
-                .id(savedUser.getId())
-                .firstName(savedUser.getFirstName())
-                .lastName(savedUser.getLastName())
-                .email(savedUser.getEmail())
-                .createdAt(savedUser.getCreatedAt())
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 }
+
