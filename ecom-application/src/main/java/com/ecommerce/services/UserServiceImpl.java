@@ -46,6 +46,19 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public UserResponseDTO getUserById(Long id) {
+        log.info("Fetching user with id: {}", id);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(
+                        "User not found with id: " + id
+                ));
+
+        return toResponseDTO(user);
+    }
+
+
     // ✅ helper method added inside the class before closing brace
     private UserResponseDTO toResponseDTO(User user) {
         return UserResponseDTO.builder()
